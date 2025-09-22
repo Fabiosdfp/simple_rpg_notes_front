@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTRPG Notes - Organize suas Campanhas</title>
+    
+    <!-- Quill.js CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.css" rel="stylesheet">
+    
+    <!-- Estilos customizados -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Principal -->
+        <header class="main-header">
+            <div class="header-content">
+                <h1>📚 TTRPG Notes</h1>
+                <p>Organize suas aventuras e mantenha registro de cada sessão</p>
+                <div class="header-actions">
+                    <div class="search-container">
+                        <input 
+                            type="text" 
+                            id="global-search" 
+                            placeholder="🔍 Buscar campanhas e notas..." 
+                            class="search-input">
+                        <div class="search-actions">
+                            <button class="btn btn-primary btn-sm" onclick="searchAll()">
+                                Buscar Tudo
+                            </button>
+                        </div>
+                    </div>
+                    <div class="connection-status" id="connection-status">
+                        🔌 Conectando...
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Layout Principal -->
+        <div class="app-layout">
+            <!-- Sidebar - Campanhas -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h3>🎲 Campanhas</h3>
+                    <button class="btn btn-primary btn-sm" onclick="showNewCampaignForm()">
+                        ➕ Nova
+                    </button>
+                </div>
+
+                <!-- Formulário Nova Campanha -->
+                <div id="new-campaign-form" class="form-section hidden">
+                    <h4>Nova Campanha</h4>
+                    <div class="form-group">
+                        <label for="campaign-name">Nome:</label>
+                        <input 
+                            type="text" 
+                            id="campaign-name" 
+                            placeholder="Ex: Lost Mine of Phandelver"
+                            maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="campaign-description">Descrição:</label>
+                        <textarea 
+                            id="campaign-description" 
+                            placeholder="Breve descrição da campanha"
+                            rows="3"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-success btn-sm" onclick="createCampaign()">
+                            <span id="create-btn-text">Criar</span>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="cancelNewCampaign()">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Campanhas -->
+                <div id="campaigns-container">
+                    <div id="campaigns-list">
+                        <div class="loading-state">
+                            📋 Carregando campanhas...
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Área de Conteúdo Principal -->
+            <main class="main-content">
+                <!-- Tela de Busca Global -->
+                <div id="search-screen" class="search-section hidden">
+                    <div class="search-header">
+                        <h2>🔍 Resultados da Busca</h2>
+                        </button>
+                    </div>
+                    
+                    <div class="search-results">
+                        <div class="search-category">
+                            <h3>📚 Campanhas</h3>
+                            <div id="search-campaigns-list">
+                                <div class="loading-state">Buscando campanhas...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="search-category">
+                            <h3>📝 Notas</h3>
+                            <div id="search-notes-list">
+                                <div class="loading-state">Buscando notas...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tela de Boas-vindas -->
+                <div id="welcome-screen" class="welcome-section">
+                    <div class="welcome-content">
+                        <h2>🎯 Bem-vindo ao TTRPG Notes!</h2>
+                        <p class="welcome-subtitle">
+                            Seu companheiro para organizar campanhas de RPG
+                        </p>
+                        
+                        <div class="getting-started-steps">
+                            <h3>🚀 Como começar:</h3>
+                            <div class="step-list">
+                                <div class="step-item">
+                                    <span class="step-number">1</span>
+                                    <div class="step-content">
+                                        <strong>Crie uma Campanha</strong>
+                                        <p>Clique em "➕ Nova" na barra lateral para criar sua primeira campanha</p>
+                                    </div>
+                                </div>
+                                <div class="step-item">
+                                    <span class="step-number">2</span>
+                                    <div class="step-content">
+                                        <strong>Selecione a Campanha</strong>
+                                        <p>Clique no nome da campanha para visualizá-la</p>
+                                    </div>
+                                </div>
+                                <div class="step-item">
+                                    <span class="step-number">3</span>
+                                    <div class="step-content">
+                                        <strong>Adicione Notas</strong>
+                                        <p>Com uma campanha selecionada, use "➕ Nova Nota" para documentar sessões</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="features-grid">
+                            <div class="feature-card">
+                                <div class="feature-icon">📝</div>
+                                <h3>Criar Campanhas</h3>
+                                <p>Organize diferentes jogos e sistemas de RPG</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">✏️</div>
+                                <h3>Notas Ricas</h3>
+                                <p>Editor avançado para documentar suas sessões</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">📅</div>
+                                <h3>Cronologia</h3>
+                                <p>Mantenha histórico organizado das aventuras</p>
+                            </div>
+                        </div>
+                        
+                        <div class="welcome-cta">
+                            <p>👈 Comece criando sua primeira campanha na barra lateral</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tela da Campanha -->
+                <div id="campaign-screen" class="campaign-section hidden">
+                    <!-- Header da Campanha -->
+                    <div class="campaign-header">
+                        <div class="campaign-info">
+                            <h2 id="campaign-title">Nome da Campanha</h2>
+                            <p id="campaign-description" class="campaign-desc">
+                                Descrição da campanha
+                            </p>
+                        </div>
+                        <div class="campaign-actions">
+                            <button id="new-note-btn" class="btn btn-success" onclick="showNewNoteForm()">
+                                ➕ Nova Nota
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Formulário Nova Nota -->
+                    <div id="new-note-form" class="form-section hidden">
+                        <div class="form-header">
+                            <h3 id="note-form-title">📝 Nova Nota</h3>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="note-campaign">Campanha:</label>
+                            <select id="note-campaign" required>
+                                <option value="">Selecione uma campanha...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="note-title">Título da Nota:</label>
+                            <input 
+                                type="text" 
+                                id="note-title" 
+                                placeholder="Ex: Sessão 1 - A Taverna Misteriosa"
+                                maxlength="150">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="note-editor">Conteúdo da Sessão:</label>
+                            <div id="note-editor" class="editor-container"></div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button class="btn btn-success" onclick="saveNote()">
+                                <span id="save-btn-text">💾 Salvar</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelNewNote()">
+                                ❌ Cancelar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Notas -->
+                    <div id="notes-section">
+                        <div class="section-header">
+                            <h3>📋 Notas da Campanha</h3>
+                            <div class="notes-counter">
+                                <span id="notes-count">0</span> notas
+                            </div>
+                        </div>
+                        
+                        <div id="notes-list">
+                            <div class="loading-state">
+                                📝 Carregando notas...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
