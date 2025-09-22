@@ -287,18 +287,26 @@ async function loadNotes(campaignId) {
             throw new Error('Campanha não encontrada');
         }
         
+        console.log(`📝 Carregando notas para campanha: ${campaign.name} (ID: ${campaignId})`);
+        
         // Usar o nome da campanha com encoding de URL
         const encodedCampaignName = encodeURIComponent(campaign.name);
-        const response = await fetch(`${API_BASE_URL}/campaigns/${encodedCampaignName}/notes`);
+        const url = `${API_BASE_URL}/campaigns/${encodedCampaignName}/notes`;
+        console.log(`📡 Fazendo requisição para: ${url}`);
+        
+        const response = await fetch(url);
         
         if (!response.ok) {
             throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
         
         const responseData = await response.json();
+        console.log('📦 Resposta da API:', responseData);
         
         // A API retorna uma estrutura com "notes", "total", e "campaign_name"
         AppState.notes = responseData.notes || [];
+        
+        console.log(`📊 ${AppState.notes.length} notas carregadas`);
         
         // Ordenar notas por data de criação (mais recentes primeiro)
         AppState.notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -755,23 +763,64 @@ async function searchCampaigns(searchTerm) {
 
 async function searchNotes(searchTerm) {
     const container = document.getElementById('search-notes-list');
+    console.log(`🔍 Buscando notas para o termo: "${searchTerm}"`);
     
     try {
-        const response = await fetch(`${API_BASE_URL}/notes`);
-        if (!response.ok) {
-            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        let allNotes = [];
+        
+        // Para buscar notas, precisamos iterar por todas as campanhas
+        // pois o endpoint é /campaigns/{campaign_name}/notes
+        if (!AppState.campaigns.length) {
+            await loadCampaigns();
         }
         
-        const responseData = await response.json();
+        console.log(`📚 Buscando em ${AppState.campaigns.length} campanhas`);
         
-        // A API retorna uma estrutura com "notes", "total", e "campaign_name"
-        const allNotes = responseData.notes || responseData || [];
-        
-        const results = allNotes.filter(note => {
-            return note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                   note.content.toLowerCase().includes(searchTerm.toLowerCase());
+        // Buscar notas de todas as campanhas
+        const notePromises = AppState.campaigns.map(async (campaign) => {
+            try {
+                const encodedCampaignName = encodeURIComponent(campaign.name);
+                const url = `${API_BASE_URL}/campaigns/${encodedCampaignName}/notes`;
+                console.log(`📡 Buscando notas em: ${campaign.name} -> ${url}`);
+                
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const responseData = await response.json();
+                    const campaignNotes = responseData.notes || [];
+                    console.log(`📝 ${campaignNotes.length} notas encontradas em "${campaign.name}"`);
+                    
+                    // Adicionar o nome da campanha a cada nota para referência
+                    return campaignNotes.map(note => ({
+                        ...note,
+                        campaign_name: campaign.name
+                    }));
+                } else {
+                    console.log(`⚠️  Erro ao buscar notas de "${campaign.name}": ${response.status}`);
+                }
+                return [];
+            } catch (error) {
+                console.error(`❌ Erro ao buscar notas da campanha ${campaign.name}:`, error);
+                return [];
+            }
         });
         
+        // Aguardar todas as promessas e concatenar resultados
+        const notesArrays = await Promise.all(notePromises);
+        allNotes = notesArrays.flat();
+        
+        console.log(`📊 Total de ${allNotes.length} notas coletadas de todas as campanhas`);
+        
+        // Filtrar notas que contêm o termo de busca
+        const results = allNotes.filter(note => {
+            const matchTitle = note.title.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchContent = note.content.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchCampaign = note.campaign_name && note.campaign_name.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            return matchTitle || matchContent || matchCampaign;
+        });
+        
+        console.log(`🎯 ${results.length} notas encontradas com o termo "${searchTerm}"`);
         renderSearchNotes(results, searchTerm);
         
     } catch (error) {
@@ -818,13 +867,13 @@ function renderSearchNotes(notes, searchTerm) {
     }
     
     container.innerHTML = notes.map(note => `
-        <div class="search-item" onclick="viewNoteFromSearch(${note.id}, '${escapeHtml(note.campaign_name)}')">
-            <div class="search-item-title">${note.title}</div>
+        <div class="search-item" onclick="viewNoteFromSearch(${note.id}, '${escapeHtml(note.campaign_name || 'Campanha Desconhecida')}')">
+            <div class="search-item-title">${escapeHtml(note.title)}</div>
             <div class="search-item-content">
-                ${stripHtml(note.content).substring(0, 150)}...
+                ${stripHtml(note.content || '').substring(0, 150)}${note.content && note.content.length > 150 ? '...' : ''}
             </div>
             <div class="search-item-meta">
-                Campanha: ${note.campaign_name} • Criada em ${formatDate(note.created_at)}
+                Campanha: ${escapeHtml(note.campaign_name || 'Desconhecida')} • Criada em ${formatDate(note.created_at)}
             </div>
         </div>
     `).join('');
